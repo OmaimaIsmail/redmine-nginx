@@ -1,0 +1,17 @@
+---
+- name: install mysql
+  apt: name=mysql-server state=present
+- name: copy my.cnf file
+  template: src=my.cnf.j2 dest=/etc/mysql/mysql.conf.d/mysqld.cnf
+- name: install mysqldb-python
+  apt: name=python-mysqldb state=present
+- name: set a new root password
+  mysql_user: login_user=root login_password=123 name=root password= "{{ new_password }}"
+- name: cred
+  copy: src=.my.cnf dest=/root/.my.cnf mode=0644
+- name: create new database
+  mysql_db: name=redmine_db state=present
+- name: create new user
+  mysql_user: name=redmine password=omaima priv='*.*:ALL' state=present
+  notify:
+   - "restart mysql"

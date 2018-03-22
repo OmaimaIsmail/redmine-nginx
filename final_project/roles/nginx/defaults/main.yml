@@ -1,0 +1,4 @@
+---
+  redmine_path: /usr/share/redmine/public
+  ruby_path: /usr/bin/ruby2.3
+# defaults file for nginx

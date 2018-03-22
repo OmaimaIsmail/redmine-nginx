@@ -1,0 +1,54 @@
+---
+- name: install redmine
+  apt: name=redmine state=present
+
+- name: install redmine-mysql
+  apt: name=redmine-mysql state=present
+- name: Package pre-requisites
+  apt: name={{ item }} state=latest
+  with_items: "{{ packages }}"
+- name: Install Bundler
+  shell: gem install bundler
+  args:
+    chdir: /usr/share/redmine/
+- name: edit database.yml
+  template: src=database.yml.j2 dest=/etc/redmine/default/database.yml mode=0644
+
+- name: install nokogiri
+  shell: gem install nokogiri
+  args:
+   chdir: /usr/share/redmine
+- name: Update Dependencies
+  shell: bundle update rake
+  args:
+   chdir: /usr/share/redmine
+  when: update
+- name: bundle Install
+  shell: bundle install --without development test
+  args:
+   chdir: /usr/share/redmine
+  when: update
+- name: Migrate database
+  shell: bundle exec rake db:migrate RAILS_ENV=production
+  args:
+    chdir: /usr/share/redmine/
+
+- name: chown Gemfile.lock
+  shell: chown www-data:www-data /usr/share/redmine/Gemfile.lock
+- name: chmod /etc/redmine/default/
+  shell: chmod -R a+w,a+r /etc/redmine/default/
+- name: Session store secret generation
+  shell: bundle exec rake generate_secret_token
+  args:
+   chdir: /usr/share/redmine/
+   creates: /usr/share/redmine/config/initializers/secret_token.rb"
+- name: chown /usr/share/redmine/instances/default/config/secret_key.txt
+  shell: chown www-data /usr/share/redmine/instances/default/config/secret_key.txt
+- name: Database schema objects creation
+  shell: RAILS_ENV=production rake db:migrate
+  args:
+   chdir: /usr/share/redmine
+- name: Database default data set
+  shell: RAILS_ENV=production REDMINE_LANG=es rake redmine:load_default_data
+  args:
+   chdir: /usr/share/redmine

@@ -1,0 +1,7 @@
+---
+update: false
+database_name: redmine_db
+username: redmine
+password: omaima
+# defaults file for redmine
+redmine_lang: "en"
